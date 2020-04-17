@@ -58,11 +58,6 @@ class CloudWatch extends AbstractProcessingHandler
     private $buffer = [];
 
     /**
-     * @var array
-     */
-    private $tags = [];
-
-    /**
      * Data amount limit (http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutLogEvents.html)
      *
      * @var int
@@ -100,7 +95,6 @@ class CloudWatch extends AbstractProcessingHandler
      * @param string $stream
      *
      * @param int $batchSize
-     * @param array $tags
      * @param int $level
      * @param bool $bubble
      *
@@ -111,7 +105,6 @@ class CloudWatch extends AbstractProcessingHandler
         $group,
         $stream,
         $batchSize = 10000,
-        array $tags = [],
         $level = Logger::DEBUG,
         $bubble = true
     ) {
@@ -123,7 +116,6 @@ class CloudWatch extends AbstractProcessingHandler
         $this->group = $group;
         $this->stream = $stream;
         $this->batchSize = $batchSize;
-        $this->tags = $tags;
 
         parent::__construct($level, $bubble);
 
