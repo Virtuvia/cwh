@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Maxbanton\Cwh\Handler;
 
 use Aws\CloudWatchLogs\CloudWatchLogsClient;
@@ -105,11 +107,11 @@ class CloudWatch extends AbstractProcessingHandler
      */
     public function __construct(
         CloudWatchLogsClient $client,
-        $group,
+        string $group,
         LogStreamNameStrategyInterface $streamNameStrategy = null,
-        $batchSize = 10000,
-        $level = Logger::DEBUG,
-        $bubble = true
+        int $batchSize = 10000,
+        int $level = Logger::DEBUG,
+        bool $bubble = true
     ) {
         if ($batchSize > 10000) {
             throw new \InvalidArgumentException('Batch size can not be greater than 10000');
@@ -202,7 +204,7 @@ class CloudWatch extends AbstractProcessingHandler
      * @param array $record
      * @return int
      */
-    private function getMessageSize($record): int
+    private function getMessageSize(array $record): int
     {
         return strlen($record['message']) + 26;
     }
