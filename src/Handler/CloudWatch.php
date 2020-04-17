@@ -3,6 +3,8 @@
 namespace Maxbanton\Cwh\Handler;
 
 use Aws\CloudWatchLogs\CloudWatchLogsClient;
+use Maxbanton\Cwh\DateWithRandomSuffixLogStreamNameStrategy;
+use Maxbanton\Cwh\LogStreamNameStrategyInterface;
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\AbstractProcessingHandler;
@@ -33,9 +35,14 @@ class CloudWatch extends AbstractProcessingHandler
     private $group;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $stream;
+
+    /**
+     * @var LogStreamNameStrategyInterface
+     */
+    private $streamNameStrategy;
 
     /**
      * @var bool
@@ -43,7 +50,7 @@ class CloudWatch extends AbstractProcessingHandler
     private $initialized = false;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $sequenceToken;
 
@@ -89,11 +96,7 @@ class CloudWatch extends AbstractProcessingHandler
      * '/' (forward slash), and '.' (period).
      * @param string $group
      *
-     *  Log stream names must be unique within the log group.
-     *  Log stream names can be between 1 and 512 characters long.
-     *  The ':' (colon) and '*' (asterisk) characters are not allowed.
-     * @param string $stream
-     *
+     * @param LogStreamNameStrategyInterface $streamNameStrategy
      * @param int $batchSize
      * @param int $level
      * @param bool $bubble
@@ -103,7 +106,7 @@ class CloudWatch extends AbstractProcessingHandler
     public function __construct(
         CloudWatchLogsClient $client,
         $group,
-        $stream,
+        LogStreamNameStrategyInterface $streamNameStrategy = null,
         $batchSize = 10000,
         $level = Logger::DEBUG,
         $bubble = true
@@ -114,7 +117,7 @@ class CloudWatch extends AbstractProcessingHandler
 
         $this->client = $client;
         $this->group = $group;
-        $this->stream = $stream;
+        $this->streamNameStrategy = $streamNameStrategy ?: new DateWithRandomSuffixLogStreamNameStrategy();
         $this->batchSize = $batchSize;
 
         parent::__construct($level, $bubble);
@@ -163,6 +166,7 @@ class CloudWatch extends AbstractProcessingHandler
             try {
                 $this->send($this->buffer);
             } catch (\Aws\CloudWatchLogs\Exception\CloudWatchLogsException $e) {
+                // @TODO grab expectedSequenceToken from Exception and re-send
                 $this->send($this->buffer);
             }
 
@@ -279,6 +283,10 @@ class CloudWatch extends AbstractProcessingHandler
 
     private function initializeLogStream(): void
     {
+        $this->stream = $this->streamNameStrategy->generateStreamName();
+        // new stream name, reset the token
+        $this->sequenceToken = null;
+
         $this
             ->client
             ->createLogStream(
