@@ -100,7 +100,7 @@ class CloudWatch extends AbstractProcessingHandler
      *
      * @param LogStreamNameStrategyInterface $streamNameStrategy
      * @param int $batchSize
-     * @param int $level
+     * @param int|string $level
      * @param bool $bubble
      *
      * @throws \Exception
@@ -110,7 +110,7 @@ class CloudWatch extends AbstractProcessingHandler
         string $group,
         LogStreamNameStrategyInterface $streamNameStrategy = null,
         int $batchSize = 10000,
-        int $level = Logger::DEBUG,
+        $level = Logger::DEBUG,
         bool $bubble = true
     ) {
         if ($batchSize > 10000) {
