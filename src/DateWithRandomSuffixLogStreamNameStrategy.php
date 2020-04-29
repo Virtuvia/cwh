@@ -35,7 +35,7 @@ class DateWithRandomSuffixLogStreamNameStrategy implements LogStreamNameStrategy
 
     protected function getDatePrefix(): string
     {
-        return date(implode($this->partSeperator, ['Y', 'm', 'd']));
+        return (new \DateTime('now', $this->dateTimeZone))->format(implode($this->partSeperator, ['Y', 'm', 'd']));
     }
 
     protected function getRandomSuffix(): string
